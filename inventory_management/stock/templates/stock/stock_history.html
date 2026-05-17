@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h2>
+        Stock History
+    </h2>
+
+    <a href="/dashboard/"
+       class="btn btn-dark">
+
+        Back To Dashboard
+
+    </a>
+
+</div>
+
+<div class="card shadow">
+
+    <div class="card-header bg-dark text-white">
+
+        Complete Stock Activity
+
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered table-hover">
+
+            <thead class="table-dark">
+
+                <tr>
+
+                    <th>Product</th>
+                    <th>Transaction Type</th>
+                    <th>Quantity</th>
+                    <th>Remarks</th>
+                    <th>Created By</th>
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for stock in stock_logs %}
+
+                <tr>
+
+                    <td>
+                        {{ stock.product.product_name }}
+                    </td>
+
+                    <td>
+
+                        {% if stock.transaction_type == 'IN' %}
+
+                        <span class="badge bg-success">
+                            Stock In
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge bg-danger">
+                            Stock Out
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ stock.quantity }}
+                    </td>
+
+                    <td>
+                        {{ stock.remarks }}
+                    </td>
+
+                    <td>
+
+                        {% if stock.created_by %}
+
+                            {{ stock.created_by.username }}
+
+                        {% else %}
+
+                            Admin
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ stock.created_at }}
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="6"
+                        class="text-center">
+
+                        No Stock History Found
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

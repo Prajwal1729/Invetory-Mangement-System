@@ -1,0 +1,375 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h2>Dashboard</h2>
+
+    <div>
+        <a href="/profile/" class="btn btn-info">View Profile</a>
+
+        {% if request.user.role == 'ADMIN' %}
+        <button class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#addProductModal">
+            Add Product
+        </button>
+        {% endif %}
+    </div>
+
+    <a href="/stock/history/" class="btn btn-primary">View Stock History</a>
+
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Products</h5>
+                <h2>{{ total_products }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning">
+            <div class="card-body">
+                <h5>Low Stock</h5>
+                <h2>{{ low_stock_products }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h5>Out Of Stock</h5>
+                <h2>{{ out_of_stock_products }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Categories</h5>
+                <h2>{{ total_categories }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Table -->
+<div class="card shadow">
+
+    <div class="card-header bg-dark text-white">Product List</div>
+
+    <div class="card-body">
+
+        <!-- Search Form -->
+        <form method="GET" action="" class="d-flex gap-2 mb-3">
+            <input type="text"
+                   name="q"
+                   id="searchInput"
+                   class="form-control"
+                   autocomplete="off"
+                   placeholder="Search by name, SKU, category, supplier, barcode..."
+                   value="{{ search_query }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if search_query %}
+            <a href="?" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
+
+        <!-- Result count -->
+        <p class="text-muted small mb-2">
+            Showing {{ products.start_index }}–{{ products.end_index }}
+            of {{ products.paginator.count }} product{{ products.paginator.count|pluralize }}
+            {% if search_query %}for "<strong>{{ search_query }}</strong>"{% endif %}
+        </p>
+
+        <table class="table table-bordered table-hover">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Product Name</th>
+                    <th>Product SKU</th>
+                    <th>Product Image</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Supplier</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Minimum Stock Level</th>
+                    <th>Barcode</th>
+                    <th>Product Status</th>
+                    <th>Created By</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="productTable">
+
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.product_name }}</td>
+                    <td>{{ product.product_sku }}</td>
+                    <td>
+                        {% if product.product_image %}
+                        <img src="{{ product.product_image.url }}"
+                             width="60" height="60" class="rounded">
+                        {% else %}
+                        No Image
+                        {% endif %}
+                    </td>
+                    <td>{{ product.description }}</td>
+                    <td>{{ product.category.name }}</td>
+                    <td>{{ product.supplier.supplier_name }}</td>
+                    <td>{{ product.price }} <span class="currency">₹</span></td>
+                    <td>{{ product.quantity }}</td>
+                    <td>{{ product.minimum_stock_level }}</td>
+                    <td>{{ product.barcode }}</td>
+                    <td>
+                        {% if product.product_status == 'Active' %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if product.created_by %}
+                            {{ product.created_by.username }}
+                        {% else %}
+                            Admin
+                        {% endif %}
+                    </td>
+                    <td>{{ product.created_at }}</td>
+                    <td>
+                        {% if request.user.role == 'ADMIN' or request.user.role == 'INVENTORY_MANAGER' %}
+                        <div class="dropdown">
+                            <button class="btn btn-dark btn-sm dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <button class="dropdown-item editBtn"
+                                            data-id="{{ product.id }}"
+                                            data-name="{{ product.product_name }}"
+                                            data-description="{{ product.description }}"
+                                            data-category="{{ product.category.id }}"
+                                            data-supplier="{{ product.supplier.id }}"
+                                            data-price="{{ product.price }}"
+                                            data-quantity="{{ product.quantity }}"
+                                            data-minimum_stock="{{ product.minimum_stock_level }}"
+                                            data-barcode="{{ product.barcode }}"
+                                            data-status="{{ product.product_status }}">
+                                        Edit
+                                    </button>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item stockBtn"
+                                       href="#"
+                                       data-id="{{ product.id }}">
+                                        Manage Stock
+                                    </a>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item text-danger deleteBtn"
+                                            data-id="{{ product.id }}">
+                                        Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="14" class="text-center text-muted py-4">
+                        No products found{% if search_query %} for "{{ search_query }}"{% endif %}.
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        <!-- Pagination -->
+        {% if products.paginator.num_pages > 1 %}
+        <nav aria-label="Product pagination">
+            <ul class="pagination justify-content-center mb-0">
+
+                <!-- Previous -->
+                <li class="page-item {% if not products.has_previous %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search_query %}q={{ search_query }}&{% endif %}page={{ products.previous_page_number }}">
+                        &laquo; Prev
+                    </a>
+                </li>
+
+                <!-- Page numbers (show a window of 5 around current page) -->
+                {% for num in products.paginator.page_range %}
+                    {% if num >= products.number|add:"-2" and num <= products.number|add:"2" %}
+                    <li class="page-item {% if num == products.number %}active{% endif %}">
+                        <a class="page-link"
+                           href="?{% if search_query %}q={{ search_query }}&{% endif %}page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next -->
+                <li class="page-item {% if not products.has_next %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search_query %}q={{ search_query }}&{% endif %}page={{ products.next_page_number }}">
+                        Next &raquo;
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+
+        <p class="text-center text-muted small mt-2">
+            Page {{ products.number }} of {{ products.paginator.num_pages }}
+        </p>
+        {% endif %}
+
+    </div>
+</div>
+
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Add Product</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button class="btn btn-primary">Save Product</button>
+                </form>
+                <div id="productMessage"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Edit Product</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProductForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_product_id">
+                    <div class="mb-3">
+                        <label>Product Name</label>
+                        <input type="text" id="edit_product_name" name="product_name" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Description</label>
+                        <textarea id="edit_description" name="description" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label>Category</label>
+                        <select id="edit_category" name="category" class="form-select">
+                            {% for category in form.category.field.queryset %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Supplier</label>
+                        <select id="edit_supplier" name="supplier" class="form-select">
+                            {% for supplier in form.supplier.field.queryset %}
+                            <option value="{{ supplier.id }}">{{ supplier.supplier_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Price</label>
+                        <input type="number" id="edit_price" name="price" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Quantity</label>
+                        <input type="number" id="edit_quantity" name="quantity" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Minimum Stock</label>
+                        <input type="number" id="edit_minimum_stock" name="minimum_stock_level" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Barcode</label>
+                        <input type="text" id="edit_barcode" name="barcode" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Status</label>
+                        <select id="edit_status" name="product_status" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Product Image</label>
+                        <input type="file" name="product_image" class="form-control">
+                    </div>
+                    <button class="btn btn-warning">Update Product</button>
+                </form>
+                <div id="editProductMessage"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Stock Modal -->
+<div class="modal fade" id="stockModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Manage Stock</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="stockForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="stock_product_id" name="product">
+                    <div class="mb-3">
+                        <label>Transaction Type</label>
+                        <select name="transaction_type" class="form-select">
+                            <option value="IN">Stock In</option>
+                            <option value="OUT">Stock Out</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Quantity</label>
+                        <input type="number" name="quantity" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Remarks</label>
+                        <textarea name="remarks" class="form-control"></textarea>
+                    </div>
+                    <button class="btn btn-success">Update Stock</button>
+                </form>
+                <div id="stockMessage"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,13 @@
+.env
+accounts/__pycache__
+dashboard/__pycache__
+products/__pycache__
+suppliers/__pycache__
+orders/__pycache__
+reports/__pycache__
+stock/__pycache__
+categories/__pycache__
+inventory_management/__pycache__
+notifications_app/__pycache__
+.DS_Store
+*.log

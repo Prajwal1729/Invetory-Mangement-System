@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card shadow">
+
+    <div class="card-header bg-success text-white">
+        Profile
+    </div>
+
+    <div class="card-body">
+
+        <h4>{{ request.user.username }}</h4>
+
+        <p>Email: {{ request.user.email }}</p>
+
+        <p>Role: {{ request.user.role }}</p>
+
+        <p>Phone: {{ request.user.phone }}</p>
+
+        <a href="{% url 'logout' %}" class="btn btn-danger">
+            Logout
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

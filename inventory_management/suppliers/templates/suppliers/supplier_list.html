@@ -1,0 +1,245 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Supplier Management</h2>
+    <button class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addSupplierModal">
+        Add Supplier
+    </button>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+
+        <!-- Search Form -->
+        <form method="GET" class="d-flex gap-2 mb-3">
+            <input type="text"
+                   name="search"
+                   class="form-control"
+                   placeholder="Search by supplier name..."
+                    autocomplete="off"
+                   value="{{ search }}">
+            <button type="submit" class="btn btn-dark">Search</button>
+            {% if search %}
+            <a href="?" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
+
+        <!-- Result Count -->
+        <p class="text-muted small mb-2">
+            Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+            of {{ page_obj.paginator.count }} supplier{{ page_obj.paginator.count|pluralize }}
+            {% if search %}for "<strong>{{ search }}</strong>"{% endif %}
+        </p>
+
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Supplier Name</th>
+                    <th>Contact Person</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in page_obj %}
+                <tr>
+                    <td>{{ supplier.supplier_name }}</td>
+                    <td>{{ supplier.contact_person }}</td>
+                    <td>{{ supplier.email }}</td>
+                    <td>{{ supplier.phone_number }}</td>
+                    <td>{{ supplier.address }}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-dark btn-sm dropdown-toggle"
+                                    data-bs-toggle="dropdown">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <button class="dropdown-item editBtn"
+                                            data-id="{{ supplier.id }}"
+                                            data-name="{{ supplier.supplier_name }}"
+                                            data-contact="{{ supplier.contact_person }}"
+                                            data-email="{{ supplier.email }}"
+                                            data-phone="{{ supplier.phone_number }}"
+                                            data-address="{{ supplier.address }}">
+                                        Edit
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item text-danger deleteBtn"
+                                            data-id="{{ supplier.id }}">
+                                        Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No suppliers found{% if search %} for "{{ search }}"{% endif %}.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="Supplier pagination">
+            <ul class="pagination justify-content-center mb-0">
+
+                <!-- First -->
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search %}search={{ search }}&{% endif %}page=1">
+                        &laquo;&laquo;
+                    </a>
+                </li>
+
+                <!-- Previous -->
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search %}search={{ search }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                        &laquo; Prev
+                    </a>
+                </li>
+
+                <!-- Page Numbers (window of 5) -->
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                    <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                        <a class="page-link"
+                           href="?{% if search %}search={{ search }}&{% endif %}page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next -->
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search %}search={{ search }}&{% endif %}page={{ page_obj.next_page_number }}">
+                        Next &raquo;
+                    </a>
+                </li>
+
+                <!-- Last -->
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search %}search={{ search }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                        &raquo;&raquo;
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+
+        <p class="text-center text-muted small mt-2">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </p>
+        {% endif %}
+
+    </div>
+</div>
+
+
+<!-- Add Supplier Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1"
+     aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSupplierModalLabel">Add Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="supplierForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="supplier_name" class="form-label">Supplier Name</label>
+                        <input type="text" class="form-control" id="supplier_name" name="supplier_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_person" class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="contact_person" name="contact_person" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                    </div>
+                </form>
+                <div id="supplierMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" form="supplierForm">Add Supplier</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Supplier Modal -->
+<div class="modal fade" id="editSupplierModal" tabindex="-1"
+     aria-labelledby="editSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSupplierModalLabel">Edit Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editSupplierForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_supplier_id" name="supplier_id">
+                    <div class="mb-3">
+                        <label for="edit_supplier_name" class="form-label">Supplier Name</label>
+                        <input type="text" class="form-control" id="edit_supplier_name" name="supplier_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_contact_person" class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="edit_contact_person" name="contact_person" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="edit_email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_phone_number" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="edit_phone_number" name="phone_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_address" class="form-label">Address</label>
+                        <textarea class="form-control" id="edit_address" name="address" rows="3" required></textarea>
+                    </div>
+                </form>
+                <div id="editSupplierMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" form="editSupplierForm">Update Supplier</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

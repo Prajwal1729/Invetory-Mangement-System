@@ -1,0 +1,265 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between mb-4">
+    <h2>Category Management</h2>
+    <button class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addCategoryModal">
+        Add Category
+    </button>
+</div>
+
+<!-- Search + Filter -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="GET">
+            <div class="row g-2">
+
+                <!-- Search -->
+                <div class="col-md-6">
+                    <input type="text"
+                           name="q"
+                           class="form-control"
+                           placeholder="Search by name or description..."
+                           value="{{ search_query }}">
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="Active"   {% if selected_status == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Inactive" {% if selected_status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark">Filter</button>
+                    {% if search_query or selected_status %}
+                    <a href="?" class="btn btn-outline-secondary">Clear</a>
+                    {% endif %}
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Category Table -->
+<div class="card shadow">
+    <div class="card-body">
+
+        <!-- Result Count -->
+        <p class="text-muted small mb-2">
+            Showing {{ categories.start_index }}–{{ categories.end_index }}
+            of {{ categories.paginator.count }} categor{{ categories.paginator.count|pluralize:"y,ies" }}
+            {% if search_query %}for "<strong>{{ search_query }}</strong>"{% endif %}
+            {% if selected_status %}— Status: <strong>{{ selected_status }}</strong>{% endif %}
+        </p>
+
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Products</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.description }}</td>
+                    <td>
+                        {% if category.status == 'Active' %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ category.product_count }}</td>
+                    <td>{{ category.created_at }}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-dark btn-sm dropdown-toggle"
+                                    data-bs-toggle="dropdown">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <button class="dropdown-item editCategoryBtn"
+                                            data-id="{{ category.id }}"
+                                            data-name="{{ category.name }}"
+                                            data-description="{{ category.description }}"
+                                            data-status="{{ category.status }}">
+                                        Edit
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item text-danger deleteCategoryBtn"
+                                            data-id="{{ category.id }}">
+                                        Delete
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No categories found{% if search_query %} for "{{ search_query }}"{% endif %}.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if categories.paginator.num_pages > 1 %}
+        <nav aria-label="Category pagination">
+            <ul class="pagination justify-content-center mb-0">
+
+                <!-- First -->
+                <li class="page-item {% if not categories.has_previous %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page=1">
+                        &laquo;&laquo;
+                    </a>
+                </li>
+
+                <!-- Previous -->
+                <li class="page-item {% if not categories.has_previous %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ categories.previous_page_number }}">
+                        &laquo; Prev
+                    </a>
+                </li>
+
+                <!-- Page Numbers (window of 5) -->
+                {% for num in categories.paginator.page_range %}
+                    {% if num >= categories.number|add:"-2" and num <= categories.number|add:"2" %}
+                    <li class="page-item {% if num == categories.number %}active{% endif %}">
+                        <a class="page-link"
+                           href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next -->
+                <li class="page-item {% if not categories.has_next %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ categories.next_page_number }}">
+                        Next &raquo;
+                    </a>
+                </li>
+
+                <!-- Last -->
+                <li class="page-item {% if not categories.has_next %}disabled{% endif %}">
+                    <a class="page-link"
+                       href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}page={{ categories.paginator.num_pages }}">
+                        &raquo;&raquo;
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+
+        <p class="text-center text-muted small mt-2">
+            Page {{ categories.number }} of {{ categories.paginator.num_pages }}
+        </p>
+        {% endif %}
+
+    </div>
+</div>
+
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Add New Category</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Category Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="Enter category name">
+                            <small class="text-danger" id="nameError"></small>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Enter category description"></textarea>
+                            <small class="text-danger" id="descriptionError"></small>
+                        </div>
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">Select Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                            <small class="text-danger" id="statusError"></small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Category</button>
+                    </div>
+                </form>
+                <div id="categoryMessage" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Edit Category</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCategoryForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_category_id">
+                    <div class="mb-3">
+                        <label>Name</label>
+                        <input type="text" id="edit_name" name="name" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Description</label>
+                        <textarea id="edit_description" name="description" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label>Status</label>
+                        <select id="edit_status" name="status" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-warning">Update Category</button>
+                </form>
+                <div id="editCategoryMessage"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

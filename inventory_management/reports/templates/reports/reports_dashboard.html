@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between mb-4">
+
+    <h2>
+        Reports Dashboard
+    </h2>
+
+    <div>
+
+        <a href="/reports/export/pdf/"
+           class="btn btn-danger">
+
+            Export PDF
+
+        </a>
+
+        <a href="/reports/export/excel/"
+           class="btn btn-success">
+
+            Export Excel
+
+        </a>
+
+    </div>
+
+</div>
+
+<!-- Low Stock Products -->
+
+<div class="card shadow mb-4">
+
+    <div class="card-header bg-warning">
+
+        Low Stock Products
+
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered">
+
+            <thead>
+
+                <tr>
+
+                    <th>Product</th>
+                    <th>Quantity</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for product in low_stock_products %}
+
+                <tr>
+
+                    <td>
+                        {{ product.product_name }}
+                    </td>
+
+                    <td>
+                        {{ product.quantity }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- Most Sold Products -->
+
+<div class="card shadow mb-4">
+
+    <div class="card-header bg-primary text-white">
+
+        Most Sold Products
+
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered">
+
+            <thead>
+
+                <tr>
+
+                    <th>Product</th>
+                    <th>Quantity Sold</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for product in most_sold_products %}
+
+                <tr>
+
+                    <td>
+                        {{ product.product_name }}
+                    </td>
+
+                    <td>
+                        {{ product.quantity }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- Recent Stock Activity -->
+
+<div class="card shadow mb-4">
+
+    <div class="card-header bg-dark text-white">
+
+        Recent Stock Activity
+
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered">
+
+            <thead>
+
+                <tr>
+
+                    <th>Product</th>
+                    <th>Change</th>
+                    <th>Action</th>
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for stock in recent_stock_activity %}
+
+                <tr>
+
+                    <td>
+                        {{ stock.product.product_name }}
+                    </td>
+
+                    <td>
+                        {{ stock.quantity_changed }}
+                    </td>
+
+                    <td>
+                        {{ stock.action }}
+                    </td>
+
+                    <td>
+                        {{ stock.created_at }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- Supplier Wise Inventory -->
+
+<div class="card shadow">
+
+    <div class="card-header bg-success text-white">
+
+        Supplier Wise Inventory
+
+    </div>
+
+    <div class="card-body">
+
+        {% for supplier in suppliers %}
+
+        <div class="mb-4">
+
+            <h5>
+                {{ supplier.supplier_name }}
+            </h5>
+
+            <table class="table table-bordered">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Product</th>
+                        <th>Quantity</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for product in supplier.product_set.all %}
+
+                    <tr>
+
+                        <td>
+                            {{ product.product_name }}
+                        </td>
+
+                        <td>
+                            {{ product.quantity }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}
