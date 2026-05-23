@@ -5,6 +5,7 @@ from .models import StockTransaction
 from notifications_app.utils import create_notification
 from accounts.decorators import role_required
 
+
 @role_required(['ADMIN', 'INVENTORY MANAGER'])
 def manage_stock(request):
 
@@ -24,6 +25,13 @@ def manage_stock(request):
 
                 product.quantity += quantity
 
+                create_notification(
+                    title='Stock Added',
+                    message=f'{quantity} items added to {product.product_name}',
+                    notification_type='STOCK_IN',
+                    roles=['ADMIN']
+                )
+
             # STOCK OUT
             elif stock.transaction_type == 'OUT':
 
@@ -37,28 +45,37 @@ def manage_stock(request):
 
                 product.quantity -= quantity
 
+                create_notification(
+                    title='Stock Removed',
+                    message=f'{quantity} items removed from {product.product_name}',
+                    notification_type='STOCK_OUT',
+                    roles=['ADMIN']
+                )
+
             # LOW STOCK WARNING
             low_stock_warning = False
 
             if product.quantity <= product.minimum_stock_level:
+
                 low_stock_warning = True
 
                 create_notification(
-                    user=request.user,
                     title='Low Stock Alert',
-                    message=f'{product.product_name} stock is low.',
-                    notification_type='LOW_STOCK'
+                    message=f'{product.product_name} stock is low. Remaining quantity: {product.quantity}',
+                    notification_type='LOW_STOCK',
+                    roles=['ADMIN', 'INVENTORY MANAGER']
                 )
 
             # OUT OF STOCK
             if product.quantity == 0:
+
                 product.product_status = 'Inactive'
 
                 create_notification(
-                    user=request.user,
                     title='Out Of Stock',
-                    message=f'{product.product_name} is out of stock.',
-                    notification_type='OUT_OF_STOCK'
+                    message=f'{product.product_name} is now out of stock.',
+                    notification_type='OUT_OF_STOCK',
+                    roles=['ADMIN', 'INVENTORY MANAGER']
                 )
 
             else:
@@ -91,6 +108,7 @@ def manage_stock(request):
         'status': 'error',
         'message': 'Invalid request'
     })
+
 
 @role_required(['ADMIN', 'INVENTORY MANAGER'])
 def stock_history(request):

@@ -1,29 +1,26 @@
 from django.db import models
-from accounts.models import CustomUser
+from django.conf import settings
 
 
 class Notification(models.Model):
 
     NOTIFICATION_TYPES = (
-
         ('LOW_STOCK', 'Low Stock'),
         ('OUT_OF_STOCK', 'Out Of Stock'),
-        ('ORDER', 'Order'),
-        ('SUPPLIER', 'Supplier'),
-        ('STOCK', 'Stock'),
-
+        ('ORDER_CREATED', 'Order Created'),
+        ('ORDER_COMPLETED', 'Order Completed'),
+        ('NEW_PRODUCT', 'New Product'),
+        ('STOCK_IN', 'Stock In'),
+        ('STOCK_OUT', 'Stock Out'),
     )
 
     user = models.ForeignKey(
-        CustomUser,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True
+        related_name='notifications'
     )
 
-    title = models.CharField(
-        max_length=255
-    )
+    title = models.CharField(max_length=255)
 
     message = models.TextField()
 
@@ -32,14 +29,12 @@ class Notification(models.Model):
         choices=NOTIFICATION_TYPES
     )
 
-    is_read = models.BooleanField(
-        default=False
-    )
+    is_read = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
-
         return self.title

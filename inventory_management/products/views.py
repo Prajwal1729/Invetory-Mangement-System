@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 # Update the import path below if your decorators.py is located elsewhere
 # For example, if it's in the same directory as views.py, use:
 # from .decorators import role_required
+from notifications_app.utils import create_notification
 
 from accounts.decorators import role_required
 
@@ -39,6 +40,14 @@ def add_product(request):
             })
 
         print(form.errors)
+
+        if product.quantity <= product.minimum_stock_level:
+            create_notification(
+                title='Low Stock Alert',
+                message=f'{product.product_name} stock is low.',
+                notification_type='LOW_STOCK',
+                roles=['ADMIN', 'INVENTORY MANAGER']
+            )
 
         return JsonResponse({
             'status': 'error',
@@ -76,6 +85,22 @@ def update_product(request, id):
                 'status': 'success',
                 'message': 'Product updated successfully'
             })
+        
+        if product.quantity <= product.minimum_stock_level:
+            create_notification(
+                title='Low Stock Alert',
+                message=f'{product.product_name} stock is low.',
+                notification_type='LOW_STOCK',
+                roles=['ADMIN', 'INVENTORY MANAGER']
+            )
+
+        if product.quantity == 0:
+            create_notification(
+                title='Out Of Stock',
+                message=f'{product.product_name} is out of stock.',
+                notification_type='OUT_OF_STOCK',
+                roles=['ADMIN', 'INVENTORY MANAGER']
+            )
 
         return JsonResponse({
             'status': 'error',

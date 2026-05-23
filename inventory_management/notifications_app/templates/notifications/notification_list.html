@@ -2,41 +2,72 @@
 
 {% block content %}
 
-<h2 class="mb-4">
-    Notifications
-</h2>
+<div class="container mt-4">
 
-<div class="card shadow">
+    <h2 class="mb-4">
+        Notifications
+    </h2>
 
-    <div class="card-body">
+    {% for notification in notifications %}
 
-        {% for notification in notifications %}
+    <div class="card mb-3 shadow-sm">
 
-        <div class="border-bottom mb-3 pb-2">
+        <div class="card-body">
 
-            <h5>
-                {{ notification.title }}
-            </h5>
+            <div class="d-flex justify-content-between">
 
-            <p>
-                {{ notification.message }}
-            </p>
+                <div>
 
-            <small class="text-muted">
-                {{ notification.created_at }}
-            </small>
+                    <h5>
+                        {{ notification.title }}
+                    </h5>
+
+                    <p>
+                        {{ notification.message }}
+                    </p>
+
+                    <small class="text-muted">
+                        {{ notification.created_at }}
+                    </small>
+
+                </div>
+
+                <div>
+
+                    {% if not notification.is_read %}
+
+                    <a href="/notifications/read/{{ notification.id }}/"
+                       class="btn btn-sm btn-success">
+
+                        Mark Read
+
+                    </a>
+
+                    {% else %}
+
+                    <span class="badge bg-secondary">
+                        Read
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
 
         </div>
 
-        {% empty %}
+    </div>
 
-        <p>
-            No notifications found
-        </p>
+    {% empty %}
 
-        {% endfor %}
+    <div class="alert alert-info">
+
+        No notifications available.
 
     </div>
+
+    {% endfor %}
 
 </div>
 

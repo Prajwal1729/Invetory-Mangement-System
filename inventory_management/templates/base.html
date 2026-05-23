@@ -98,21 +98,42 @@
                     </li>
                     {% endif %}
 
-                    <li class="nav-item me-2">
-                        <a class="btn btn-warning btn-sm"
-                           href="/notifications/">
+                {% with unread_count=request.user.notifications.all|length %}
+
+                    <li class="nav-item me-3">
+
+                        <a class="nav-link position-relative pe-4"
+                        href="/notifications/">
+
                             Notifications
+
+                            {% if unread_count > 0 %}
+
+                            <span class="position-absolute top-5 start-100 translate-middle badge rounded-pill bg-danger">
+
+                                {{ unread_count }}
+
+                            </span>
+
+                            {% endif %}
+
                         </a>
+
                     </li>
 
-                    <li class="nav-item">
+                    {% endwith %}
+
+                    <li class="nav-item ms-2">
 
                         <a class="btn btn-danger btn-sm"
-                           href="/logout/">
+                        href="/logout/">
+
                             Logout
+
                         </a>
 
                     </li>
+
 
                     {% else %}
 

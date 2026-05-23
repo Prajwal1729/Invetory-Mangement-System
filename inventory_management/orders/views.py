@@ -48,6 +48,7 @@ def order_list(request):
     })
 
 
+@role_required(['ADMIN'])
 def create_order(request):
 
     if request.method == 'POST':
@@ -74,6 +75,13 @@ def create_order(request):
 
             order.save()
 
+            create_notification(
+                title='New Order Created',
+                message=f'Order #{order.id} has been created.',
+                notification_type='ORDER_CREATED',
+                roles=['ADMIN']
+            )
+
             return JsonResponse({
                 'status': 'success',
                 'message': 'Order created successfully'
@@ -84,7 +92,7 @@ def create_order(request):
             'errors': form.errors
         })
 
-
+@role_required(['ADMIN'])
 def update_order_status(request, id):
 
     order = get_object_or_404(Order, id=id)
@@ -93,27 +101,14 @@ def update_order_status(request, id):
 
         new_status = request.POST.get('status')
 
-        # Prevent changes after completed
         if order.status == 'Completed':
-            create_notification(
-                user=request.user,
-                title='Order Status Updated',
-                message=f'Order {order.order_number} marked as {order.status}.',
-                notification_type='ORDER'
-            )
+
             return JsonResponse({
                 'status': 'error',
                 'message': 'Completed order cannot be modified'
             })
 
-        # Prevent cancelling completed order
-        if (order.status == 'Completed' and new_status == 'Cancelled'):
-            create_notification(
-                user=request.user,
-                title='Order Status Updated',
-                message=f'Order {order.order_number} marked as {order.status}.',
-                notification_type='ORDER'
-            )
+        if order.status == 'Completed' and new_status == 'Cancelled':
 
             return JsonResponse({
                 'status': 'error',
@@ -123,6 +118,13 @@ def update_order_status(request, id):
         order.status = new_status
 
         order.save()
+
+        create_notification(
+            title='Order Status Updated',
+            message=f'Order {order.order_number} marked as {order.status}.',
+            notification_type='ORDER_COMPLETED',
+            roles=['ADMIN']
+        )
 
         return JsonResponse({
             'status': 'success',
@@ -134,12 +136,11 @@ def update_order_status(request, id):
         'message': 'Invalid request'
     })
 
-
+@role_required(['ADMIN'])
 def cancel_order(request, id):
 
     order = get_object_or_404(Order, id=id)
 
-    # Cannot cancel completed order
     if order.status == 'Completed':
 
         return JsonResponse({
@@ -147,9 +148,8 @@ def cancel_order(request, id):
             'message': 'Completed order cannot be cancelled'
         })
 
-    # Already cancelled
-    if order.status == 'Cancelled':
 
+    if order.status == 'Cancelled':
         return JsonResponse({
             'status': 'error',
             'message': 'Order already cancelled'
@@ -158,6 +158,14 @@ def cancel_order(request, id):
     order.status = 'Cancelled'
 
     order.save()
+
+
+    create_notification(
+        title='Order Cancelled',
+        message=f'Order {order.order_number} has been cancelled.',
+        notification_type='ORDER_CREATED',
+        roles=['ADMIN']
+    )
 
     return JsonResponse({
         'status': 'success',
